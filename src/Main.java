@@ -7,6 +7,10 @@ public class Main {
 
     public static void main(String[] args) {
 
+        System.out.println("/// LET'S PLAY! ///");
+        System.out.println("Enter a number 1-9 to place a piece on the corresponding tile.");
+        System.out.println("Use your wits to beat the CPU!");
+
         char[][] tttBoard = new char[][]{
                 {' ', ' ', ' ', ' ', ' ', '|', ' ', ' ', ' ', ' ', ' ', '|', ' ', ' ', ' ', ' ', ' '},
                 {'-', '-', '-', '-', '-', '+', '-', '-', '-', '-', '-', '+', '-', '-', '-', '-', '-'},
@@ -17,9 +21,15 @@ public class Main {
         createBoard(tttBoard);
 
         while (true) {
+
             System.out.print("PLAYER'S TURN: ");
             Scanner scan = new Scanner(System.in);
             int playerPosition = scan.nextInt();
+
+            while (playerPositions.contains(playerPosition) || cpuPositions.contains(playerPosition)) {
+                System.out.println("Position taken! Pick an open space from 1-9.");
+                playerPosition = scan.nextInt();
+            }
 
             if (playerPosition < 1 || playerPosition > 9) {
                 do {
@@ -30,22 +40,35 @@ public class Main {
                 while (playerPosition < 1 || playerPosition > 9);
             }
 
+            boolean gameInProgress = true;
+
             makeMove(tttBoard, playerPosition, "player");
-            playerPositions.add(playerPosition);
             createBoard(tttBoard);
 
             String won = checkWinner();
-            System.out.println(won);
+            if (won.length() > 0) {
+                System.out.println(won);
+                gameInProgress = false;
+                break;
+            }
 
-            Random rand = new Random();
-            int cpuPosition = rand.nextInt(9) + 1;
-            cpuPositions.add(cpuPosition);
+            if (gameInProgress == true) {
 
-            makeMove(tttBoard, cpuPosition, "cpu");
-            createBoard(tttBoard);
+                Random rand = new Random();
+                int cpuPosition = rand.nextInt(9) + 1;
+                while (playerPositions.contains(cpuPosition) || cpuPositions.contains(cpuPosition)) {
+                    cpuPosition = rand.nextInt(9) + 1;
+                }
 
-            won = checkWinner();
-            System.out.println(won);
+                makeMove(tttBoard, cpuPosition, "cpu");
+                createBoard(tttBoard);
+
+                won = checkWinner();
+                if (won.length() > 0) {
+                    System.out.println(won);
+                    break;
+                }
+            }
 
         }
     }
@@ -61,10 +84,14 @@ public class Main {
     public static void makeMove(char[][] tttBoard, int position, String user) {
         char symbol = ' ';
 
-        if (user.equals("player"))
+        if (user.equals("player")) {
             symbol = 'X';
-        else if (user.equals("cpu"))
+            playerPositions.add(position);
+        } else if (user.equals("cpu")) {
             symbol = 'O';
+            cpuPositions.add(position);
+            System.out.println("CPU'S TURN: " + position);
+        }
 
         switch (position) {
             case 1:
@@ -122,18 +149,17 @@ public class Main {
         winConditions.add(diagonal2);
 
         for (List condition : winConditions) {
-            if (playerPositions.containsAll(condition)) {
+            if (playerPositions.containsAll(condition) ||
+                    (playerPositions.size() + cpuPositions.size() == 9) && playerPositions.containsAll(condition)) {
                 return "CONGRATULATIONS! YOU'VE WON!";
-            } else if (cpuPositions.containsAll(condition)) {
+            } else if (cpuPositions.containsAll(condition) ||
+                    (playerPositions.size() + cpuPositions.size() == 9) && cpuPositions.containsAll(condition)) {
                 return "CPU HAS WON. GAME OVER.";
             } else if (playerPositions.size() + cpuPositions.size() == 9) {
                 return "TIE! TRY AGAIN.";
             }
-
         }
-
         return "";
-
     }
 
 }
